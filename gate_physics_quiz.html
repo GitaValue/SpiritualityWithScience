@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GATE Physics Quiz</title>
+  <meta name="theme-color" content="#004aad" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --primary: #004aad;
+      --secondary: #2196f3;
+      --text: #ffffff;
+      --bg: linear-gradient(135deg, var(--primary), var(--secondary));
+      --card-bg: rgba(255, 255, 255, 0.15);
+      --button-bg: #fff;
+      --button-text: #004aad;
+    }
+
+    [data-theme="light"] {
+      --primary: #e8f0ff;
+      --secondary: #cfe0ff;
+      --text: #002b7a;
+      --bg: linear-gradient(135deg, var(--primary), var(--secondary));
+      --card-bg: rgba(0, 0, 0, 0.05);
+      --button-bg: #004aad;
+      --button-text: #fff;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      text-align: center;
+      transition: 0.4s all;
+      min-height: 100vh;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 10px 20px;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    button {
+      background: var(--button-bg);
+      color: var(--button-text);
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      margin: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 85%;
+      max-width: 320px;
+      transition: 0.3s;
+    }
+    button:hover {
+      opacity: 0.85;
+      transform: scale(1.03);
+    }
+
+    .question-card {
+      background: var(--card-bg);
+      border-radius: 15px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 5px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #00ffcc;
+      transition: width 0.5s;
+    }
+
+    .leaderboard {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      text-align: left;
+    }
+
+    #timer {
+      font-size: 18px;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 22px; }
+      button { font-size: 14px; }
+      .question-card { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚛️ GATE Physics</h1>
+    <button onclick="toggleTheme()">🌓</button>
+  </header>
+
+  <div class="container" id="main-container">
+    <h2>Select a Subject</h2>
+    <div id="subject-buttons">
+      <button onclick="startQuiz('Mechanics')">Mechanics</button>
+      <button onclick="startQuiz('Optics')">Optics</button>
+      <button onclick="startQuiz('Quantum')">Quantum Mechanics</button>
+      <button onclick="startQuiz('Thermo')">Thermodynamics</button>
+      <button onclick="showLeaderboard()">🏆 Leaderboard</button>
+    </div>
+
+    <div id="quiz-section" style="display:none;"></div>
+    <div id="leaderboard-section" style="display:none;"></div>
+  </div>
+
+  <script>
+    let currentSubject = "";
+    let currentQuestion = 0;
+    let score = 0;
+    let timeLeft = 0;
+    let timerInterval;
+
+    const quizData = {
+      "Mechanics": [
+        { q: "A particle moves in a circle of radius R with constant speed v. Its angular momentum about the center is?", o: ["mvR", "mv²R", "mvR²", "m²vR"], a: 0, e: "Angular momentum L = mvr for circular motion." },
+        { q: "Which law governs planetary motion?", o: ["Newton’s Law", "Kepler’s Law", "Coulomb’s Law", "Hooke’s Law"], a: 1, e: "Kepler’s laws describe the motion of planets around the sun." }
+      ],
+      "Optics": [
+        { q: "What happens in total internal reflection?", o: ["All light reflects", "All light refracts", "Light is absorbed", "Light scatters"], a: 0, e: "Occurs when angle of incidence exceeds the critical angle." },
+        { q: "Lens formula is?", o: ["1/f=1/v+1/u", "f=v+u", "1/f=v/u", "f=1/v+1/u"], a: 0, e: "It relates object distance (u), image distance (v), and focal length (f)." }
+      ],
+      "Quantum": [
+  {q:"The Stern–Gerlach experiment demonstrates quantization of", o:["Charge","Orbital angular momentum","Spin angular momentum","Energy"], a:2},
+  {q:"The Hilbert space of a spin-1/2 particle is", o:["1D","2D","3D","Infinite"], a:1},
+  {q:"Which operator corresponds to a physical observable?", o:["Unitary","Hermitian","Anti-Hermitian","Nilpotent"], a:1},
+  {q:"Eigenvalues of a Hermitian operator are always", o:["Complex","Imaginary","Real","Zero"], a:2},
+  {q:"If [A,B]=0 then A and B", o:["Are incompatible","Have no uncertainty","Can be simultaneously diagonalized","Are identical"], a:2},
+  {q:"The uncertainty relation is derived using", o:["Fourier transform","Taylor expansion","Cauchy–Schwarz inequality","Eigenvalue equation"], a:2},
+  {q:"Which pair is compatible?", o:["x and p","Sx and Sy","L² and Lz","x and px"], a:2},
+  {q:"⟨ψ|ψ⟩ represents", o:["Energy","Probability density","Normalization","Expectation value"], a:2},
+  {q:"Measurement causes", o:["Unitary evolution","Wavefunction collapse","Phase change only","Energy loss"], a:1},
+  {q:"Time evolution operator is", o:["Hermitian","Unitary","Anti-unitary","Projection"], a:1},
+
+  {q:"U†U = I defines", o:["Hermitian operator","Projection operator","Unitary operator","Identity operator"], a:2},
+  {q:"Generator of time translation is", o:["Momentum","Angular momentum","Hamiltonian","Position"], a:2},
+  {q:"The commutator [x,p] equals", o:["0","ħ","iħ","−iħ"], a:2},
+  {q:"Which transformation changes coordinates only?", o:["Active","Passive","Unitary","Canonical"], a:1},
+  {q:"Probability conservation requires", o:["Hermiticity","Normalization","Unitarity","Degeneracy"], a:2},
+
+  {q:"Global phase factor affects", o:["Probability","Expectation values","Physical state","Nothing observable"], a:3},
+  {q:"Expectation value of A is", o:["Â|ψ⟩","⟨ψ|A|ψ⟩","|ψ⟩⟨ψ|","⟨A⟩²"], a:1},
+  {q:"Eigenstates of Hermitian operator are", o:["Degenerate","Orthogonal","Complex","Incomplete"], a:1},
+  {q:"Projection operator satisfies", o:["P²=I","P=P†","P²=P","det P = 1"], a:2},
+  {q:"CSCO is required to", o:["Normalize state","Find uncertainty","Uniquely specify state","Find energy"], a:2},
+
+  {q:"Anti-unitary operator corresponds to", o:["Rotation","Parity","Time reversal","Translation"], a:2},
+  {q:"If [A,H]=0 then A is", o:["Time-dependent","Conserved","Zero","Degenerate"], a:1},
+  {q:"Spectrum of operator refers to", o:["Matrix elements","Eigenvalues","Uncertainty","Expectation values"], a:1},
+  {q:"Momentum operator in x-representation is", o:["−ħ∂/∂x","−iħ∂/∂x","iħ∂/∂x","ħ∂/∂x"], a:1},
+
+  // Remaining questions condensed (same difficulty)
+  {q:"Quantum states belong to", o:["Euclidean space","Hilbert space","Phase space","Minkowski space"], a:1},
+  {q:"Completeness relation is", o:["Σ|n⟩=1","Σ⟨n|n⟩=1","Σ|n⟩⟨n|=I","⟨ψ|ψ⟩=1"], a:2},
+  {q:"Uncertainty ΔA equals", o:["⟨A⟩","⟨A²⟩","√(⟨A²⟩−⟨A⟩²)","⟨A⟩²"], a:2},
+  {q:"Degeneracy usually arises due to", o:["Normalization","Symmetry","Measurement","Uncertainty"], a:1},
+  {q:"Physical observables correspond to", o:["Numbers","Vectors","Operators","Functions"], a:2}
+      ],
+      "Thermo": [
+        { q: "First law of thermodynamics states?", o: ["Conservation of energy", "Conservation of heat", "Conservation of work", "Conservation of entropy"], a: 0, e: "ΔU = Q - W, conservation of energy principle." },
+        { q: "Ideal gas equation is?", o: ["PV=nRT", "P+V=RT", "P=VnT", "R=PV/T"], a: 0, e: "Equation of state for an ideal gas." }
+      ]
+    };
+
+    function toggleTheme() {
+      document.body.dataset.theme =
+        document.body.dataset.theme === "light" ? "dark" : "light";
+    }
+
+    function startQuiz(subject) {
+      currentSubject = subject;
+      currentQuestion = 0;
+      score = 0;
+      timeLeft = quizData[subject].length * 20;
+      document.getElementById("subject-buttons").style.display = "none";
+      document.getElementById("leaderboard-section").style.display = "none";
+      document.getElementById("quiz-section").style.display = "block";
+      startTimer();
+      showQuestion();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = `⏱️ ${timeLeft}s`;
+        if (timeLeft <= 0) endQuiz();
+      }, 1000);
+    }
+
+    function showQuestion() {
+      const quiz = quizData[currentSubject];
+      if (currentQuestion >= quiz.length) return endQuiz();
+
+      const q = quiz[currentQuestion];
+      const progress = ((currentQuestion) / quiz.length) * 100;
+      document.getElementById("quiz-section").innerHTML = `
+        <div class="question-card">
+          <div id="timer">⏱️ ${timeLeft}s</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:${progress}%;"></div></div>
+          <h3>${currentSubject}</h3>
+          <p><b>Q${currentQuestion + 1}:</b> ${q.q}</p>
+          ${q.o.map((opt, i) => `<button onclick="checkAnswer(${i})">${opt}</button>`).join("<br>")}
+        </div>`;
+    }
+
+    function checkAnswer(selected) {
+      const q = quizData[currentSubject][currentQuestion];
+      const correct = q.a === selected;
+      if (correct) score++;
+
+      const feedback = correct ? "✅ Correct! Well done." : "❌ Wrong answer.";
+      document.querySelector(".question-card").innerHTML += `<p>${feedback}<br><i>${q.e}</i></p>`;
+
+      setTimeout(() => {
+        currentQuestion++;
+        showQuestion();
+      }, 2000);
+    }
+
+    function endQuiz() {
+      clearInterval(timerInterval);
+      saveScore(currentSubject, score);
+      document.getElementById("quiz-section").innerHTML = `
+        <div class="question-card">
+          <h2>${currentSubject} Complete!</h2>
+          <p>Your Score: <b>${score}/${quizData[currentSubject].length}</b></p>
+          <button onclick="startQuiz('${currentSubject}')">Retry</button>
+          <button onclick="showLeaderboard()">🏆 Leaderboard</button>
+          <button onclick="home()">🏠 Home</button>
+        </div>`;
+    }
+
+    function saveScore(subject, score) {
+      let data = JSON.parse(localStorage.getItem("gate_scores") || "{}");
+      if (!data[subject]) data[subject] = [];
+      data[subject].push(score);
+      localStorage.setItem("gate_scores", JSON.stringify(data));
+    }
+
+    function showLeaderboard() {
+      clearInterval(timerInterval);
+      const section = document.getElementById("leaderboard-section");
+      section.style.display = "block";
+      document.getElementById("quiz-section").style.display = "none";
+      let data = JSON.parse(localStorage.getItem("gate_scores") || "{}");
+      let html = "<h2>🏆 Leaderboard</h2>";
+
+      if (Object.keys(data).length === 0) {
+        html += "<p>No scores yet! Try a quiz.</p>";
+      } else {
+        for (let s in data) {
+          let scores = data[s];
+          html += `<div class='leaderboard'>
+            <b>${s}</b><br>
+            🔝 Top: ${Math.max(...scores)} / ${quizData[s].length}<br>
+            📊 Avg: ${(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(2)}<br>
+            🧭 Attempts: ${scores.length}
+          </div>`;
+        }
+      }
+      html += `<button onclick="resetScores()">🗑️ Reset</button><button onclick="home()">🏠 Home</button>`;
+      section.innerHTML = html;
+    }
+
+    function resetScores() {
+      localStorage.removeItem("gate_scores");
+      alert("Scores reset!");
+      home();
+    }
+
+    function home() {
+      document.getElementById("quiz-section").style.display = "none";
+      document.getElementById("leaderboard-section").style.display = "none";
+      document.getElementById("subject-buttons").style.display = "block";
+    }
+
+    if ("serviceWorker" in navigator)
+      navigator.serviceWorker.register("service-worker.js");
+  </script>
+</body>
+</html>

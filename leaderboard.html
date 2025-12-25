@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Leaderboard | GATE Physics Quiz</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background: radial-gradient(circle at top, #0a0a1f, #050510);
+      color: #e0e0ff;
+      font-family: "Poppins", sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 60px;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: #00ffff;
+      text-shadow: 0 0 10px #00ffff;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .tab {
+      background: #111133;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: 0.3s;
+      border: 1px solid #00ffff33;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #00ffff55, #0077ff55);
+      border: 1px solid #00ffff;
+      box-shadow: 0 0 12px #00ffff66;
+    }
+
+    .leaderboard {
+      width: 90%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 20px #00ffff33;
+    }
+
+    .entry {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 15px;
+      margin: 8px 0;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      border: 1px solid #00ffff22;
+      transition: 0.3s;
+    }
+
+    .entry:hover {
+      transform: scale(1.03);
+      box-shadow: 0 0 12px #00ffff55;
+    }
+
+    .rank {
+      color: #00ffff;
+      font-weight: 700;
+      width: 40px;
+    }
+
+    .name {
+      flex-grow: 1;
+    }
+
+    .score {
+      color: #ffcc00;
+      font-weight: 700;
+    }
+
+    .home-link {
+      margin-top: 30px;
+      color: #00ffff;
+      text-decoration: none;
+      border: 1px solid #00ffff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      transition: 0.3s;
+    }
+
+    .home-link:hover {
+      background: #00ffff;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏆 Leaderboard</h1>
+
+  <div class="tabs">
+    <div class="tab active" id="overallTab">Overall</div>
+    <div class="tab" id="subjectTab">By Subject</div>
+  </div>
+
+  <div class="leaderboard" id="leaderboardContainer"></div>
+
+  <a href="index.html" class="home-link">🏠 Back to Home</a>
+
+  <script>
+    const overallTab = document.getElementById("overallTab");
+    const subjectTab = document.getElementById("subjectTab");
+    const container = document.getElementById("leaderboardContainer");
+
+    // Example data from localStorage:
+    // localStorage.setItem("leaderboard", JSON.stringify([{name:"Aarav",subject:"Quantum",score:18},{name:"Riya",subject:"Thermo",score:19}]));
+
+    const leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+
+    function renderOverall() {
+      container.innerHTML = "";
+      const sorted = [...leaderboard].sort((a, b) => b.score - a.score);
+      if (sorted.length === 0) {
+        container.innerHTML = "<p>No scores yet. Take a quiz to appear here!</p>";
+        return;
+      }
+      sorted.forEach((entry, i) => {
+        container.innerHTML += `
+          <div class="entry">
+            <div class="rank">#${i + 1}</div>
+            <div class="name">${entry.name} (${entry.subject})</div>
+            <div class="score">${entry.score}</div>
+          </div>`;
+      });
+    }
+
+    function renderSubjectWise() {
+      container.innerHTML = "";
+      const grouped = {};
+      leaderboard.forEach(e => {
+        if (!grouped[e.subject]) grouped[e.subject] = [];
+        grouped[e.subject].push(e);
+      });
+      Object.keys(grouped).forEach(sub => {
+        container.innerHTML += `<h3 style="color:#00ffff;text-shadow:0 0 8px #00ffff;margin-top:15px;">${sub}</h3>`;
+        const sorted = grouped[sub].sort((a, b) => b.score - a.score).slice(0, 5);
+        sorted.forEach((entry, i) => {
+          container.innerHTML += `
+            <div class="entry">
+              <div class="rank">#${i + 1}</div>
+              <div class="name">${entry.name}</div>
+              <div class="score">${entry.score}</div>
+            </div>`;
+        });
+      });
+    }
+
+    overallTab.onclick = () => {
+      overallTab.classList.add("active");
+      subjectTab.classList.remove("active");
+      renderOverall();
+    };
+
+    subjectTab.onclick = () => {
+      subjectTab.classList.add("active");
+      overallTab.classList.remove("active");
+      renderSubjectWise();
+    };
+
+    // Default view:
+    renderOverall();
+  </script>
+</body>
+</html>

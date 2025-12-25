@@ -1,0 +1,12 @@
+{
+  "name": "GATE Physics Quiz",
+  "short_name": "GATE Quiz",
+  "start_url": "gate_physics_quiz.html",
+  "display": "standalone",
+  "background_color": "#004aad",
+  "theme_color": "#004aad",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

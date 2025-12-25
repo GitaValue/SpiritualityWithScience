@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GATE Physics Quiz</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top, #0a0a1f, #050510);
+      color: #e0e0ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 30px;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 20px 25px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 0 15px #00ffff55;
+      backdrop-filter: blur(10px);
+    }
+
+    .question {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+    }
+
+    .option {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #00ffff22;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 8px 0;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .option:hover {
+      background: #00ffff33;
+      transform: scale(1.02);
+    }
+
+    .timer {
+      color: #ffcc00;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px #ffcc00;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 10px 25px;
+      background: #00ffff;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      color: #000;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #00cccc;
+    }
+
+    .explanation {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      color: #ccc;
+      border-top: 1px solid #00ffff33;
+      padding-top: 8px;
+    }
+
+    .score-box {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #00ffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2 id="subjectName">Quantum Mechanics Quiz</h2>
+    <div class="timer">⏳ Time Left: <span id="time">60</span>s</div>
+    <div class="question" id="question"></div>
+    <div id="options"></div>
+    <button class="btn" id="nextBtn">Next</button>
+    <div id="result" class="score-box"></div>
+  </div>
+
+  <script>
+    // 🧠 Example quiz data (replace per subject)
+    const subject = localStorage.getItem("currentSubject") || "Quantum Mechanics";
+    document.getElementById("subjectName").innerText = subject + " Quiz";
+
+const quizData = [
+  {
+    q: "The Stern–Gerlach experiment provides evidence for quantization of",
+    options: ["Charge", "Orbital angular momentum", "Spin angular momentum", "Energy"],
+    answer: 2,
+    explanation: "The splitting of the beam shows quantized intrinsic spin angular momentum."
+  },
+  {
+    q: "The Hilbert space of a spin-1/2 particle is",
+    options: ["One-dimensional", "Two-dimensional", "Three-dimensional", "Infinite-dimensional"],
+    answer: 1,
+    explanation: "Spin-1/2 systems require a two-dimensional Hilbert space."
+  },
+  {
+    q: "In quantum mechanics, physical observables are represented by",
+    options: ["Numbers", "Vectors", "Hermitian operators", "Unitary operators"],
+    answer: 2,
+    explanation: "Observables correspond to Hermitian operators to ensure real eigenvalues."
+  },
+  {
+    q: "Eigenvalues of a Hermitian operator are always",
+    options: ["Complex", "Imaginary", "Real", "Zero"],
+    answer: 2,
+    explanation: "Hermiticity guarantees real eigenvalues."
+  },
+  {
+    q: "If two operators commute, then",
+    options: [
+      "They represent incompatible observables",
+      "They cannot be measured simultaneously",
+      "They can be simultaneously diagonalized",
+      "They are identical"
+    ],
+    answer: 2,
+    explanation: "Commuting operators share common eigenstates."
+  },
+  {
+    q: "The uncertainty relation is derived using",
+    options: [
+      "Fourier transform",
+      "Taylor expansion",
+      "Cauchy–Schwarz inequality",
+      "Eigenvalue equation"
+    ],
+    answer: 2,
+    explanation: "The generalized uncertainty principle follows from the Cauchy–Schwarz inequality."
+  },
+  {
+    q: "Which of the following is a compatible pair?",
+    options: ["x and p", "Sx and Sy", "L² and Lz", "x and px"],
+    answer: 2,
+    explanation: "L² and Lz commute and can be simultaneously measured."
+  },
+  {
+    q: "The expectation value of an observable A is",
+    options: ["Â|ψ⟩", "⟨ψ|A|ψ⟩", "|ψ⟩⟨ψ|", "⟨A⟩²"],
+    answer: 1,
+    explanation: "Expectation value is ⟨ψ|A|ψ⟩."
+  },
+  {
+    q: "Measurement of an observable causes",
+    options: [
+      "Unitary evolution",
+      "Wavefunction collapse",
+      "Only phase change",
+      "No change in the state"
+    ],
+    answer: 1,
+    explanation: "Measurement collapses the wavefunction into an eigenstate."
+  },
+  {
+    q: "The time evolution operator is",
+    options: ["Hermitian", "Unitary", "Anti-unitary", "Projection"],
+    answer: 1,
+    explanation: "Time evolution must preserve probability, hence it is unitary."
+  },
+
+  {
+    q: "The operator generating time translations is",
+    options: ["Momentum", "Angular momentum", "Hamiltonian", "Position"],
+    answer: 2,
+    explanation: "The Hamiltonian generates time evolution."
+  },
+  {
+    q: "The commutator [x, p] is equal to",
+    options: ["0", "ħ", "iħ", "−iħ"],
+    answer: 2,
+    explanation: "[x, p] = iħ is a fundamental commutation relation."
+  },
+  {
+    q: "Which transformation changes only the reference frame?",
+    options: ["Active", "Passive", "Unitary", "Canonical"],
+    answer: 1,
+    explanation: "Passive transformations change coordinates, not physical states."
+  },
+  {
+    q: "If [A, H] = 0, then A is",
+    options: ["Time dependent", "Conserved", "Zero", "Degenerate"],
+    answer: 1,
+    explanation: "Commutation with Hamiltonian implies conservation."
+  },
+  {
+    q: "A global phase factor multiplying a wavefunction affects",
+    options: ["Probability", "Expectation values", "Physical state", "Nothing observable"],
+    answer: 3,
+    explanation: "Global phase has no observable physical consequence."
+  },
+
+  {
+    q: "The completeness relation is written as",
+    options: [
+      "Σ|n⟩ = 1",
+      "Σ⟨n|n⟩ = 1",
+      "Σ|n⟩⟨n| = I",
+      "⟨ψ|ψ⟩ = 1"
+    ],
+    answer: 2,
+    explanation: "Completeness ensures expansion of any state in eigenbasis."
+  },
+  {
+    q: "Quantum mechanical states belong to",
+    options: ["Euclidean space", "Hilbert space", "Phase space", "Minkowski space"],
+    answer: 1,
+    explanation: "Quantum states are vectors in Hilbert space."
+  },
+  {
+    q: "Anti-unitary operators are associated with",
+    options: ["Parity", "Rotation", "Time reversal", "Translation"],
+    answer: 2,
+    explanation: "Time reversal is represented by an anti-unitary operator."
+  },
+  {
+    q: "Degeneracy of energy levels usually arises due to",
+    options: ["Normalization", "Symmetry", "Measurement", "Uncertainty principle"],
+    answer: 1,
+    explanation: "Symmetry of the Hamiltonian leads to degeneracy."
+  },
+  {
+    q: "The uncertainty in observable A is defined as",
+    options: [
+      "⟨A⟩",
+      "⟨A²⟩",
+      "√(⟨A²⟩ − ⟨A⟩²)",
+      "⟨A⟩²"
+    ],
+    answer: 2,
+    explanation: "Standard deviation gives the uncertainty."
+  },
+  {
+    q: "The time-dependent Schrödinger equation is",
+    options: [
+      "iħ ∂ψ/∂t = Hψ",
+      "ħ²∇²ψ = Vψ",
+      "Hψ = Eψ",
+      "∇²ψ + k²ψ = 0"
+    ],
+    answer: 0,
+    explanation: "TDSE governs time evolution: iħ ∂ψ/∂t = Hψ."
+  },
+  {
+    q: "The Hamiltonian operator represents",
+    options: ["Momentum", "Total energy", "Potential energy", "Kinetic energy"],
+    answer: 1,
+    explanation: "Hamiltonian corresponds to total energy of the system."
+  },
+  {
+    q: "Momentum operator in position representation is",
+    options: [
+      "−ħ ∂/∂x",
+      "−iħ ∂/∂x",
+      "iħ ∂/∂x",
+      "ħ ∂/∂x"
+    ],
+    answer: 1,
+    explanation: "p̂ = −iħ ∂/∂x in position space."
+  },
+  {
+    q: "The Ehrenfest theorem relates",
+    options: [
+      "Eigenvalues and eigenstates",
+      "Expectation values to classical equations",
+      "Uncertainty relations",
+      "Wavefunction collapse"
+    ],
+    answer: 1,
+    explanation: "Ehrenfest theorem connects quantum expectation values with classical mechanics."
+  },
+  {
+    q: "The correspondence principle states that",
+    options: [
+      "Quantum mechanics replaces classical mechanics",
+      "Quantum results match classical results in large quantum numbers",
+      "Classical mechanics is incorrect",
+      "Particles behave only as waves"
+    ],
+    answer: 1,
+    explanation: "Quantum mechanics reproduces classical results in appropriate limits."
+  },
+
+  {
+    q: "Probability current density j is proportional to",
+    options: [
+      "|ψ|²",
+      "ψ*ψ",
+      "Im(ψ*∇ψ)",
+      "Re(ψ*∇ψ)"
+    ],
+    answer: 2,
+    explanation: "j ∝ Im(ψ*∇ψ), ensuring probability conservation."
+  },
+  {
+    q: "The continuity equation represents",
+    options: [
+      "Energy conservation",
+      "Momentum conservation",
+      "Probability conservation",
+      "Angular momentum conservation"
+    ],
+    answer: 2,
+    explanation: "Continuity equation ensures conservation of probability."
+  },
+  {
+    q: "In the Heisenberg picture",
+    options: [
+      "States vary with time",
+      "Operators vary with time",
+      "Both vary with time",
+      "Neither varies with time"
+    ],
+    answer: 1,
+    explanation: "In Heisenberg picture, operators evolve with time."
+  },
+  {
+    q: "The Schrödinger and Heisenberg pictures are",
+    options: [
+      "Physically different",
+      "Mathematically inconsistent",
+      "Physically equivalent",
+      "Valid only for free particles"
+    ],
+    answer: 2,
+    explanation: "Both pictures give identical physical predictions."
+  },
+  {
+    q: "The commutator [x, p] equals",
+    options: ["0", "ħ", "iħ", "−iħ"],
+    answer: 2,
+    explanation: "[x, p] = iħ is fundamental."
+  },
+
+  {
+    q: "Momentum eigenfunctions in position space are",
+    options: [
+      "Delta functions",
+      "Plane waves",
+      "Gaussian packets",
+      "Standing waves"
+    ],
+    answer: 1,
+    explanation: "Momentum eigenstates correspond to plane waves."
+  },
+  {
+    q: "Normalization of eigenfunctions ensures",
+    options: [
+      "Energy conservation",
+      "Unitary evolution",
+      "Total probability equals one",
+      "Eigenvalue reality"
+    ],
+    answer: 2,
+    explanation: "Normalization guarantees total probability = 1."
+  },
+  {
+    q: "The delta function potential V(x)=−αδ(x) supports",
+    options: [
+      "No bound state",
+      "Exactly one bound state",
+      "Two bound states",
+      "Infinite bound states"
+    ],
+    answer: 1,
+    explanation: "Attractive delta potential has exactly one bound state."
+  },
+  {
+    q: "Energy eigenvalues of a 1D infinite square well are",
+    options: [
+      "Linearly spaced",
+      "Degenerate",
+      "Proportional to n²",
+      "Continuous"
+    ],
+    answer: 2,
+    explanation: "Eₙ ∝ n² for infinite square well."
+  },
+  {
+    q: "Quantum tunneling occurs because",
+    options: [
+      "Energy is conserved",
+      "Wavefunction is continuous",
+      "Particle has wave nature",
+      "Potential is finite"
+    ],
+    answer: 2,
+    explanation: "Wave nature allows non-zero probability in classically forbidden regions."
+  },
+
+  {
+    q: "For a potential barrier, transmission coefficient T is",
+    options: [
+      "Always zero",
+      "Always one",
+      "Less than one",
+      "Greater than one"
+    ],
+    answer: 2,
+    explanation: "T < 1 for finite potential barriers."
+  },
+  {
+    q: "The Hamiltonian of a harmonic oscillator is",
+    options: [
+      "p²/2m",
+      "p²/2m + kx²",
+      "p²/2m + ½mω²x²",
+      "½mω²x²"
+    ],
+    answer: 2,
+    explanation: "H = p²/2m + ½mω²x²."
+  },
+  {
+    q: "Ground state energy of quantum harmonic oscillator is",
+    options: [
+      "0",
+      "ħω",
+      "½ħω",
+      "2ħω"
+    ],
+    answer: 2,
+    explanation: "Zero-point energy = ½ħω."
+  },
+  {
+    q: "Creation and annihilation operators satisfy",
+    options: [
+      "[a, a†] = 0",
+      "[a, a†] = 1",
+      "[a, a†] = iħ",
+      "[a, a†] = ħ"
+    ],
+    answer: 1,
+    explanation: "Ladder operators obey [a, a†] = 1."
+  },
+  {
+    q: "Completeness of eigenfunctions implies",
+    options: [
+      "Unique eigenvalues",
+      "Expansion of any state",
+      "Zero uncertainty",
+      "Energy conservation"
+    ],
+    answer: 1,
+    explanation: "Any state can be expanded in a complete eigenbasis."
+  },
+  {
+    q: "A potential V(r) is called spherically symmetric if it depends on",
+    options: ["x only", "y only", "z only", "r only"],
+    answer: 3,
+    explanation: "Spherically symmetric potentials depend only on radial distance r."
+  },
+  {
+    q: "In a central force problem, the conserved quantity is",
+    options: ["Linear momentum", "Angular momentum", "Energy only", "Position vector"],
+    answer: 1,
+    explanation: "Central forces conserve angular momentum."
+  },
+  {
+    q: "The two-body problem in quantum mechanics is simplified by using",
+    options: [
+      "Laboratory coordinates",
+      "Center-of-mass coordinates",
+      "Cartesian coordinates",
+      "Spherical harmonics"
+    ],
+    answer: 1,
+    explanation: "Transformation to CM and relative coordinates decouples motion."
+  },
+  {
+    q: "The reduced mass μ of a two-body system is given by",
+    options: [
+      "m₁ + m₂",
+      "m₁ − m₂",
+      "m₁m₂/(m₁ + m₂)",
+      "m₁m₂"
+    ],
+    answer: 2,
+    explanation: "Reduced mass μ = m₁m₂ / (m₁ + m₂)."
+  },
+  {
+    q: "The Schrödinger equation for hydrogen atom is solved using",
+    options: [
+      "Cartesian coordinates",
+      "Cylindrical coordinates",
+      "Spherical polar coordinates",
+      "Parabolic coordinates only"
+    ],
+    answer: 2,
+    explanation: "Spherical symmetry suggests spherical polar coordinates."
+  },
+
+  {
+    q: "The Coulomb potential for hydrogen atom varies as",
+    options: ["r", "1/r", "r²", "1/r²"],
+    answer: 1,
+    explanation: "Coulomb potential is inversely proportional to r."
+  },
+  {
+    q: "Energy eigenvalues of hydrogen atom depend on",
+    options: [
+      "n only",
+      "l only",
+      "m only",
+      "n and l"
+    ],
+    answer: 0,
+    explanation: "Hydrogen atom energy depends only on principal quantum number n."
+  },
+  {
+    q: "The degeneracy of hydrogen atom arises due to",
+    options: [
+      "Spin only",
+      "Angular momentum",
+      "Accidental symmetry",
+      "External field"
+    ],
+    answer: 2,
+    explanation: "Accidental degeneracy comes from higher symmetry of Coulomb potential."
+  },
+  {
+    q: "Radial wavefunctions of hydrogen atom are expressed in terms of",
+    options: [
+      "Legendre polynomials",
+      "Hermite polynomials",
+      "Laguerre polynomials",
+      "Bessel functions"
+    ],
+    answer: 2,
+    explanation: "Radial solutions involve associated Laguerre polynomials."
+  },
+  {
+    q: "Angular part of hydrogen atom wavefunction is given by",
+    options: [
+      "Hermite polynomials",
+      "Spherical harmonics",
+      "Laguerre polynomials",
+      "Plane waves"
+    ],
+    answer: 1,
+    explanation: "Angular dependence is described by spherical harmonics Yₗᵐ."
+  },
+
+  {
+    q: "The quantum numbers l and m correspond to",
+    options: [
+      "Energy and spin",
+      "Radial and angular momentum",
+      "Orbital angular momentum and its z-component",
+      "Spin and parity"
+    ],
+    answer: 2,
+    explanation: "l → orbital angular momentum, m → its projection."
+  },
+  {
+    q: "The eigenvalues of L² are",
+    options: [
+      "lħ",
+      "l²ħ²",
+      "l(l+1)ħ²",
+      "mħ²"
+    ],
+    answer: 2,
+    explanation: "L² eigenvalues are l(l+1)ħ²."
+  },
+  {
+    q: "The three-dimensional harmonic oscillator has degeneracy because of",
+    options: [
+      "Spin",
+      "Spherical symmetry",
+      "Accidental degeneracy",
+      "Relativistic effects"
+    ],
+    answer: 1,
+    explanation: "Degeneracy arises due to spherical symmetry."
+  },
+  {
+    q: "Stationary states are those for which",
+    options: [
+      "Wavefunction depends on time",
+      "Probability density is time-independent",
+      "Energy is zero",
+      "Momentum is conserved"
+    ],
+    answer: 1,
+    explanation: "Stationary states have time-independent probability density."
+  },
+  {
+    q: "Expectation value of position in a stationary state is",
+    options: [
+      "Time-dependent",
+      "Time-independent",
+      "Zero always",
+      "Infinite"
+    ],
+    answer: 1,
+    explanation: "Expectation values of observables are time-independent in stationary states."
+  },
+
+  {
+    q: "Spin angular momentum of an electron is",
+    options: [
+      "0",
+      "ħ",
+      "½ħ",
+      "√2ħ"
+    ],
+    answer: 2,
+    explanation: "Electron has spin s = 1/2."
+  },
+  {
+    q: "Spin operators are represented using",
+    options: [
+      "Hermite polynomials",
+      "Pauli matrices",
+      "Spherical harmonics",
+      "Bessel functions"
+    ],
+    answer: 1,
+    explanation: "Spin-1/2 operators are represented by Pauli matrices."
+  },
+  {
+    q: "The Stern–Gerlach experiment confirms the existence of",
+    options: [
+      "Orbital angular momentum",
+      "Nuclear spin",
+      "Electron spin",
+      "Magnetic monopole"
+    ],
+    answer: 2,
+    explanation: "The experiment demonstrates intrinsic electron spin."
+  },
+  {
+    q: "The spinor for a spin-up electron along z-axis is",
+    options: [
+      "(1,0)",
+      "(0,1)",
+      "(1,1)",
+      "(1,−1)"
+    ],
+    answer: 0,
+    explanation: "Spin-up along z is represented by column vector (1,0)."
+  },
+  {
+    q: "In a uniform magnetic field, the spin of a particle undergoes",
+    options: [
+      "Linear motion",
+      "Simple harmonic motion",
+      "Larmor precession",
+      "Free fall"
+    ],
+    answer: 2,
+    explanation: "Spin precesses about magnetic field direction (Larmor precession)."
+  },
+  {
+    q: "Perturbation theory is applicable when",
+    options: [
+      "The Hamiltonian is exactly solvable",
+      "The perturbation is small compared to unperturbed Hamiltonian",
+      "The perturbation is very large",
+      "The system has degeneracy only"
+    ],
+    answer: 1,
+    explanation: "Perturbation theory works when the additional term is small."
+  },
+  {
+    q: "The total Hamiltonian in perturbation theory is written as",
+    options: [
+      "H = H₀",
+      "H = H′",
+      "H = H₀ + λH′",
+      "H = λH₀ + H′"
+    ],
+    answer: 2,
+    explanation: "H₀ is unperturbed Hamiltonian and λH′ is the perturbation."
+  },
+  {
+    q: "In non-degenerate perturbation theory, the first-order energy correction is",
+    options: [
+      "⟨n|H′|n⟩",
+      "⟨n|H₀|n⟩",
+      "Σ⟨n|H′|m⟩",
+      "Zero always"
+    ],
+    answer: 0,
+    explanation: "First-order correction equals expectation value of perturbation."
+  },
+  {
+    q: "The first-order correction to the wavefunction depends on",
+    options: [
+      "Diagonal matrix elements only",
+      "Off-diagonal matrix elements",
+      "Energy eigenvalues only",
+      "Perturbation strength only"
+    ],
+    answer: 1,
+    explanation: "Wavefunction correction involves off-diagonal elements."
+  },
+  {
+    q: "Degenerate perturbation theory is required when",
+    options: [
+      "Eigenvalues are continuous",
+      "Two or more states have same unperturbed energy",
+      "Perturbation is zero",
+      "System is time-dependent"
+    ],
+    answer: 1,
+    explanation: "Degeneracy requires special treatment."
+  },
+
+  {
+    q: "In degenerate perturbation theory, correct zeroth-order states are obtained by",
+    options: [
+      "Diagonalizing H₀",
+      "Diagonalizing H′ in degenerate subspace",
+      "Ignoring perturbation",
+      "Using ladder operators"
+    ],
+    answer: 1,
+    explanation: "Perturbation must be diagonalized within degenerate subspace."
+  },
+  {
+    q: "The two-state system is commonly used to explain",
+    options: [
+      "Harmonic oscillator",
+      "Spin-1 system",
+      "Level splitting",
+      "Free particle"
+    ],
+    answer: 2,
+    explanation: "Two-state model explains level splitting due to perturbations."
+  },
+  {
+    q: "The Stark effect refers to",
+    options: [
+      "Splitting due to magnetic field",
+      "Splitting due to electric field",
+      "Relativistic correction",
+      "Spin-orbit coupling"
+    ],
+    answer: 1,
+    explanation: "Stark effect is caused by external electric field."
+  },
+  {
+    q: "The linear Stark effect occurs in",
+    options: [
+      "Hydrogen atom ground state",
+      "Non-degenerate states only",
+      "Degenerate states",
+      "Harmonic oscillator"
+    ],
+    answer: 2,
+    explanation: "Linear Stark effect occurs only for degenerate states."
+  },
+  {
+    q: "Quadratic Stark effect occurs when",
+    options: [
+      "Degeneracy is present",
+      "No degeneracy exists",
+      "Magnetic field is applied",
+      "Spin is involved"
+    ],
+    answer: 1,
+    explanation: "Quadratic Stark effect occurs in non-degenerate systems."
+  },
+
+  {
+    q: "The Zeeman effect refers to splitting of spectral lines due to",
+    options: [
+      "Electric field",
+      "Magnetic field",
+      "Pressure",
+      "Temperature"
+    ],
+    answer: 1,
+    explanation: "Zeeman effect is due to magnetic field."
+  },
+  {
+    q: "Normal Zeeman effect occurs when",
+    options: [
+      "Spin is ignored",
+      "Spin is included",
+      "Electric field is present",
+      "Relativistic correction dominates"
+    ],
+    answer: 0,
+    explanation: "Normal Zeeman effect assumes zero spin."
+  },
+  {
+    q: "Fine structure in hydrogen atom arises due to",
+    options: [
+      "External fields",
+      "Spin-spin interaction",
+      "Relativistic and spin-orbit corrections",
+      "Nuclear size"
+    ],
+    answer: 2,
+    explanation: "Fine structure comes from relativistic and spin-orbit effects."
+  },
+  {
+    q: "Van der Waals interaction is primarily due to",
+    options: [
+      "Permanent dipoles",
+      "Induced dipole interactions",
+      "Magnetic moments",
+      "Nuclear forces"
+    ],
+    answer: 1,
+    explanation: "Van der Waals forces arise from induced dipoles."
+  },
+  {
+    q: "Van der Waals potential varies with distance as",
+    options: [
+      "1/r",
+      "1/r²",
+      "1/r³",
+      "1/r⁶"
+    ],
+    answer: 3,
+    explanation: "Van der Waals potential ∝ −1/r⁶."
+  },
+
+  {
+    q: "Ground state energy of hydrogen atom is approximately",
+    options: [
+      "−3.4 eV",
+      "−13.6 eV",
+      "−27.2 eV",
+      "−1 eV"
+    ],
+    answer: 1,
+    explanation: "Hydrogen ground state energy is −13.6 eV."
+  },
+  {
+    q: "Variational principle provides",
+    options: [
+      "Exact ground state energy",
+      "Upper bound to ground state energy",
+      "Lower bound to ground state energy",
+      "Exact excited state energies"
+    ],
+    answer: 1,
+    explanation: "Variational method gives an upper bound to ground state energy."
+  },
+  {
+    q: "Helium ground state energy estimation requires",
+    options: [
+      "Exact solution",
+      "Time-dependent perturbation",
+      "Approximate methods",
+      "Free particle model"
+    ],
+    answer: 2,
+    explanation: "Electron–electron interaction requires approximation."
+  },
+  {
+    q: "First-order perturbation correction vanishes if",
+    options: [
+      "⟨n|H′|n⟩ = 0",
+      "System is degenerate",
+      "Perturbation is large",
+      "Energy is negative"
+    ],
+    answer: 0,
+    explanation: "Zero diagonal element leads to zero first-order correction."
+  },
+  {
+    q: "The components of angular momentum satisfy the commutation relation",
+    options: [
+      "[Jx, Jy] = 0",
+      "[Jx, Jy] = iħJz",
+      "[Jx, Jy] = ħ",
+      "[Jx, Jy] = −iħJz"
+    ],
+    answer: 1,
+    explanation: "Angular momentum operators satisfy [Jx, Jy] = iħJz and cyclic permutations."
+  },
+  {
+    q: "The eigenvalues of J² are given by",
+    options: [
+      "jħ",
+      "j²ħ²",
+      "j(j+1)ħ²",
+      "m²ħ²"
+    ],
+    answer: 2,
+    explanation: "J²|jm⟩ = j(j+1)ħ²|jm⟩."
+  },
+  {
+    q: "The eigenvalues of Jz are",
+    options: [
+      "jħ",
+      "mħ",
+      "j(j+1)ħ²",
+      "m²ħ²"
+    ],
+    answer: 1,
+    explanation: "Jz|jm⟩ = mħ|jm⟩."
+  },
+  {
+    q: "The allowed values of m for given j are",
+    options: [
+      "0 to j",
+      "−j to j in steps of 1",
+      "−j to j in steps of ħ",
+      "1 to j"
+    ],
+    answer: 1,
+    explanation: "m = −j, −j+1, ..., j."
+  },
+  {
+    q: "The ladder operators are defined as",
+    options: [
+      "J± = Jx ± Jy",
+      "J± = Jx ± iJy",
+      "J± = Jy ± iJz",
+      "J± = Jz ± iJx"
+    ],
+    answer: 1,
+    explanation: "Ladder operators are J± = Jx ± iJy."
+  },
+
+  {
+    q: "Action of J+ on |jm⟩ gives",
+    options: [
+      "m decreases",
+      "m increases by one",
+      "j increases",
+      "state vanishes always"
+    ],
+    answer: 1,
+    explanation: "J+ raises m by one unit."
+  },
+  {
+    q: "Orbital angular momentum operator is the generator of",
+    options: [
+      "Time translation",
+      "Spatial translation",
+      "Rotations",
+      "Boosts"
+    ],
+    answer: 2,
+    explanation: "Orbital angular momentum generates spatial rotations."
+  },
+  {
+    q: "The orbital angular momentum operator is defined as",
+    options: [
+      "L = r + p",
+      "L = r × p",
+      "L = p × r",
+      "L = rp"
+    ],
+    answer: 1,
+    explanation: "Orbital angular momentum L = r × p."
+  },
+  {
+    q: "The eigenfunctions of L² and Lz are",
+    options: [
+      "Plane waves",
+      "Hermite polynomials",
+      "Spherical harmonics",
+      "Laguerre polynomials"
+    ],
+    answer: 2,
+    explanation: "Spherical harmonics Yₗᵐ(θ,φ) are eigenfunctions."
+  },
+  {
+    q: "The degeneracy of orbital angular momentum for given l is",
+    options: [
+      "2l",
+      "2l + 1",
+      "l",
+      "l + 1"
+    ],
+    answer: 1,
+    explanation: "For given l, m runs from −l to +l, giving 2l+1 states."
+  },
+
+  {
+    q: "Addition of two angular momenta j₁ and j₂ gives total j values",
+    options: [
+      "j₁ + j₂ only",
+      "|j₁ − j₂| to j₁ + j₂",
+      "j₁j₂",
+      "j₁ + j₂ + 1"
+    ],
+    answer: 1,
+    explanation: "j ranges from |j₁ − j₂| to j₁ + j₂."
+  },
+  {
+    q: "Clebsch–Gordan coefficients arise in",
+    options: [
+      "Perturbation theory",
+      "Angular momentum addition",
+      "Time evolution",
+      "Scattering theory"
+    ],
+    answer: 1,
+    explanation: "CG coefficients relate coupled and uncoupled bases."
+  },
+  {
+    q: "The sum of squares of Clebsch–Gordan coefficients for fixed jm equals",
+    options: [
+      "0",
+      "1",
+      "j",
+      "2j + 1"
+    ],
+    answer: 1,
+    explanation: "Normalization condition requires sum of squares = 1."
+  },
+  {
+    q: "Schwinger’s oscillator model represents angular momentum using",
+    options: [
+      "Fermions",
+      "Two harmonic oscillators",
+      "Three oscillators",
+      "Spinors"
+    ],
+    answer: 1,
+    explanation: "Angular momentum is mapped to two harmonic oscillators."
+  },
+  {
+    q: "Spin-½ rotation operator is expressed using",
+    options: [
+      "Hermite polynomials",
+      "Spherical harmonics",
+      "Pauli matrices",
+      "Laguerre polynomials"
+    ],
+    answer: 2,
+    explanation: "Spin-½ rotations are described using Pauli matrices."
+  },
+
+  {
+    q: "The rotation operator for spin-½ is given by",
+    options: [
+      "exp(−iθJ/ħ)",
+      "exp(−iθσ/2)",
+      "exp(−iθL)",
+      "exp(−iθp)"
+    ],
+    answer: 1,
+    explanation: "Rotation operator involves Pauli matrices: exp(−iθσ/2)."
+  },
+  {
+    q: "A pure state density matrix satisfies",
+    options: [
+      "ρ² ≠ ρ",
+      "Tr(ρ) ≠ 1",
+      "ρ² = ρ",
+      "ρ is anti-Hermitian"
+    ],
+    answer: 2,
+    explanation: "Pure states satisfy ρ² = ρ."
+  },
+  {
+    q: "A mixed state is characterized by",
+    options: [
+      "Single wavefunction",
+      "ρ² = ρ",
+      "Statistical mixture of states",
+      "Zero entropy"
+    ],
+    answer: 2,
+    explanation: "Mixed states are statistical ensembles of pure states."
+  },
+  {
+    q: "Tensor operators transform under rotations like",
+    options: [
+      "Scalars",
+      "Vectors",
+      "Spherical tensors",
+      "Spinors"
+    ],
+    answer: 2,
+    explanation: "Tensor operators transform as spherical tensors."
+  },
+  {
+    q: "The Wigner–Eckart theorem separates matrix elements into",
+    options: [
+      "Radial and angular parts",
+      "Spin and orbital parts",
+      "Geometric and dynamical parts",
+      "Time and space parts"
+    ],
+    answer: 2,
+    explanation: "Matrix elements factorize into CG coefficient and reduced matrix element."
+  },
+  {
+    q: "A symmetry operation in quantum mechanics is represented by",
+    options: [
+      "Hermitian operator",
+      "Unitary or anti-unitary operator",
+      "Projection operator",
+      "Density operator"
+    ],
+    answer: 1,
+    explanation: "Symmetry operations are represented by unitary or anti-unitary operators."
+  },
+  {
+    q: "Degeneracy of energy levels usually arises due to",
+    options: [
+      "Measurement process",
+      "Normalization",
+      "Symmetry of the Hamiltonian",
+      "Uncertainty principle"
+    ],
+    answer: 2,
+    explanation: "Symmetries of the Hamiltonian lead to degeneracy."
+  },
+  {
+    q: "Parity operator corresponds to",
+    options: [
+      "Time reversal",
+      "Spatial inversion",
+      "Rotation",
+      "Translation"
+    ],
+    answer: 1,
+    explanation: "Parity changes r → −r."
+  },
+  {
+    q: "Eigenvalues of the parity operator are",
+    options: [
+      "0 and 1",
+      "±1",
+      "±ħ",
+      "±i"
+    ],
+    answer: 1,
+    explanation: "Parity eigenvalues are ±1."
+  },
+  {
+    q: "Parity selection rules apply when",
+    options: [
+      "Potential is time-dependent",
+      "Hamiltonian is parity invariant",
+      "System is degenerate",
+      "Magnetic field is present"
+    ],
+    answer: 1,
+    explanation: "Parity selection rules follow from parity invariance."
+  },
+
+  {
+    q: "Time reversal operator in quantum mechanics is",
+    options: [
+      "Unitary",
+      "Hermitian",
+      "Anti-unitary",
+      "Projection"
+    ],
+    answer: 2,
+    explanation: "Time reversal is represented by an anti-unitary operator."
+  },
+  {
+    q: "For a spin-½ particle, the time reversal operator involves",
+    options: [
+      "Parity operator",
+      "Complex conjugation and spin flip",
+      "Only complex conjugation",
+      "Only spin rotation"
+    ],
+    answer: 1,
+    explanation: "Time reversal reverses spin and performs complex conjugation."
+  },
+  {
+    q: "Kramers degeneracy occurs when",
+    options: [
+      "Time reversal symmetry is broken",
+      "Time reversal symmetry exists and spin is half-integer",
+      "Spin is integer",
+      "Parity is violated"
+    ],
+    answer: 1,
+    explanation: "Half-integer spin systems with time reversal symmetry show Kramers degeneracy."
+  },
+  {
+    q: "The spin singlet state of two spin-½ particles is",
+    options: [
+      "|↑↑⟩",
+      "|↓↓⟩",
+      "(|↑↓⟩ − |↓↑⟩)/√2",
+      "(|↑↓⟩ + |↓↑⟩)/√2"
+    ],
+    answer: 2,
+    explanation: "Singlet state has total spin zero."
+  },
+  {
+    q: "Spin-singlet states exhibit",
+    options: [
+      "No correlation",
+      "Classical correlation",
+      "Perfect quantum anti-correlation",
+      "Independent spins"
+    ],
+    answer: 2,
+    explanation: "Measurements are perfectly anti-correlated."
+  },
+
+  {
+    q: "Einstein’s locality principle states that",
+    options: [
+      "Particles are always entangled",
+      "No influence can travel faster than light",
+      "Measurements are deterministic",
+      "Wavefunction is real"
+    ],
+    answer: 1,
+    explanation: "Locality forbids faster-than-light influences."
+  },
+  {
+    q: "Bell’s inequality tests the validity of",
+    options: [
+      "Quantum mechanics",
+      "Local hidden variable theories",
+      "Classical mechanics",
+      "Relativity"
+    ],
+    answer: 1,
+    explanation: "Bell’s inequality is satisfied by local hidden variable theories."
+  },
+  {
+    q: "Violation of Bell’s inequality implies",
+    options: [
+      "Quantum mechanics is wrong",
+      "Local realism is invalid",
+      "Relativity is violated",
+      "Particles are classical"
+    ],
+    answer: 1,
+    explanation: "Experiments violate Bell’s inequality, rejecting local realism."
+  },
+  {
+    q: "The EPR paradox was proposed to argue that",
+    options: [
+      "Quantum mechanics is complete",
+      "Quantum mechanics is incomplete",
+      "Entanglement does not exist",
+      "Wavefunctions are classical"
+    ],
+    answer: 1,
+    explanation: "EPR argued quantum mechanics might be incomplete."
+  },
+  {
+    q: "Hidden variable theories attempt to",
+    options: [
+      "Explain quantum randomness deterministically",
+      "Reject causality",
+      "Remove wavefunctions",
+      "Eliminate measurements"
+    ],
+    answer: 0,
+    explanation: "Hidden variables restore determinism."
+  },
+
+  {
+    q: "Quantum entanglement refers to",
+    options: [
+      "Independent particles",
+      "Classical correlations",
+      "Non-separable quantum states",
+      "Localized wavefunctions"
+    ],
+    answer: 2,
+    explanation: "Entangled states cannot be written as product states."
+  },
+  {
+    q: "Entanglement between three particles leads to",
+    options: [
+      "Classical correlations only",
+      "GHZ-type states",
+      "No correlations",
+      "Independent subsystems"
+    ],
+    answer: 1,
+    explanation: "Three-particle entanglement includes GHZ states."
+  },
+  {
+    q: "Quantum teleportation transfers",
+    options: [
+      "A physical particle",
+      "Energy",
+      "Quantum state",
+      "Information faster than light"
+    ],
+    answer: 2,
+    explanation: "Teleportation transfers a quantum state using entanglement and classical communication."
+  },
+  {
+    q: "Quantum teleportation requires",
+    options: [
+      "Only entanglement",
+      "Only classical communication",
+      "Entanglement and classical communication",
+      "Superluminal signals"
+    ],
+    answer: 2,
+    explanation: "Both entanglement and classical communication are required."
+  },
+  {
+    q: "The no-cloning theorem states that",
+    options: [
+      "Quantum states can be copied",
+      "Unknown quantum states cannot be perfectly cloned",
+      "Only mixed states can be cloned",
+      "Entangled states cannot exist"
+    ],
+    answer: 1,
+    explanation: "Perfect cloning of an arbitrary unknown quantum state is impossible."
+  }
+];
+
+    let current = 0;
+    let score = 0;
+    let time = 60;
+    const questionEl = document.getElementById("question");
+    const optionsEl = document.getElementById("options");
+    const nextBtn = document.getElementById("nextBtn");
+    const timeEl = document.getElementById("time");
+    const resultEl = document.getElementById("result");
+
+    function showQuestion() {
+      const q = quizData[current];
+      questionEl.textContent = q.q;
+      optionsEl.innerHTML = "";
+      q.options.forEach((opt, i) => {
+        const div = document.createElement("div");
+        div.classList.add("option");
+        div.textContent = opt;
+        div.onclick = () => selectOption(i);
+        optionsEl.appendChild(div);
+      });
+    }
+
+    function selectOption(i) {
+      const correct = quizData[current].answer;
+      const options = document.querySelectorAll(".option");
+      options.forEach((opt, index) => {
+        opt.style.pointerEvents = "none";
+        if (index === correct) opt.style.background = "#00ff9944";
+        else if (index === i && i !== correct) opt.style.background = "#ff444466";
+      });
+      if (i === correct) score++;
+      const exp = document.createElement("div");
+      exp.classList.add("explanation");
+      exp.textContent = "💡 " + quizData[current].explanation;
+      optionsEl.appendChild(exp);
+    }
+
+    nextBtn.onclick = () => {
+      if (current < quizData.length - 1) {
+        current++;
+        showQuestion();
+      } else {
+        endQuiz();
+      }
+    };
+
+    function endQuiz() {
+      clearInterval(timer);
+      document.querySelector(".quiz-container").innerHTML = `
+        <h2>Quiz Completed!</h2>
+        <p>Your Score: ${score} / ${quizData.length}</p>
+        <input type='text' id='username' placeholder='Enter your name' style='padding:8px;border-radius:5px;border:none;margin-top:10px;width:80%;'>
+        <button class='btn' onclick='saveScore()'>Save & View Leaderboard</button>
+      `;
+    }
+
+    function saveScore() {
+      const name = document.getElementById("username").value || "Anonymous";
+      const data = JSON.parse(localStorage.getItem("leaderboard")) || [];
+      data.push({ name, subject, score });
+      localStorage.setItem("leaderboard", JSON.stringify(data));
+      window.location.href = "leaderboard.html";
+    }
+
+    // Timer
+    const timer = setInterval(() => {
+      time--;
+      timeEl.textContent = time;
+      if (time <= 0) {
+        clearInterval(timer);
+        endQuiz();
+      }
+    }, 1000);
+
+    showQuestion();
+  </script>
+</body>
+</html>
